@@ -38,6 +38,17 @@ import com.moowork.gradle.node.NodePlugin;
 import com.moowork.gradle.node.npm.NpmTask;
 import com.moowork.gradle.node.variant.Variant;
 import io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension;
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.codehaus.groovy.runtime.GStringImpl;
 import org.curioswitch.gradle.common.LambdaClosure;
 import org.curioswitch.gradle.plugins.gcloud.util.PlatformHelper;
@@ -52,18 +63,6 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.gradle.plugins.ide.idea.model.IdeaModule;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 /**
  * A simple gradle plugin that configures the protobuf-gradle-plugin with appropriate defaults for a
