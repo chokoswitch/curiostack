@@ -36,20 +36,11 @@ import com.google.protobuf.gradle.ProtobufPlugin;
 import com.moowork.gradle.node.NodeExtension;
 import com.moowork.gradle.node.NodePlugin;
 import com.moowork.gradle.node.npm.NpmTask;
+import com.moowork.gradle.node.variant.Variant;
 import io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension;
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import org.codehaus.groovy.runtime.GStringImpl;
 import org.curioswitch.gradle.common.LambdaClosure;
+import org.curioswitch.gradle.plugins.gcloud.util.PlatformHelper;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -61,6 +52,18 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.gradle.plugins.ide.idea.model.IdeaModule;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A simple gradle plugin that configures the protobuf-gradle-plugin with appropriate defaults for a
@@ -80,7 +83,10 @@ public class GrpcApiPlugin implements Plugin<Project> {
   private static final String TYPESCRIPT_VERSION = "2.6.2";
 
   private static final String RESOLVED_PLUGIN_SCRIPT_TEMPLATE =
-      "#!|NODE_PATH|\n" + "" + "require('|IMPORTED_MODULE|');";
+      "#!|NODE_PATH|\n" + "" + "require('./|IMPORTED_MODULE|');";
+
+  private static final String RESOLVED_PLUGIN_SCRIPT_WINDOWS_TEMPLATE =
+      "@\"|NODE_PATH|\" \"%~dp0\\..\\ts-protoc-gen\\bin\\|IMPORTED_MODULE|\" %*";
 
   private static final String PACKAGE_JSON_TEMPLATE;
   private static final String TSCONFIG_TEMPLATE;
@@ -158,13 +164,9 @@ public class GrpcApiPlugin implements Plugin<Project> {
                           .create("ts")
                           .setPath(
                               project
-                                  .file("node_modules/.bin/protoc-gen-ts-resolved")
-                                  .getAbsolutePath());
-                      locators
-                          .create("flow")
-                          .setPath(
-                              project
-                                  .file("node_modules/.bin/protoc-gen-flow-resolved")
+                                  .file(
+                                      "node_modules/.bin/protoc-gen-ts-resolved"
+                                          + (new PlatformHelper().isWindows() ? ".cmd" : ""))
                                   .getAbsolutePath());
                     }
                   }));
@@ -253,14 +255,10 @@ public class GrpcApiPlugin implements Plugin<Project> {
                     .dependsOn("installTsProtocGen")
                     .doFirst(
                         t -> {
-                          String nodePath =
-                              project
-                                  .getExtensions()
-                                  .getByType(NodeExtension.class)
-                                  .getVariant()
-                                  .getNodeExec();
+                          Variant node =
+                              project.getExtensions().getByType(NodeExtension.class).getVariant();
                           writeResolvedScript(
-                              project, nodePath, "protoc-gen-ts-resolved", "./protoc-gen-ts");
+                              project, node, "protoc-gen-ts-resolved", "protoc-gen-ts");
                         });
             addResolvedPluginScript
                 .getOutputs()
@@ -292,18 +290,23 @@ public class GrpcApiPlugin implements Plugin<Project> {
                             Files.write(
                                 packageJsonPath,
                                 PACKAGE_JSON_TEMPLATE
-                                    .replaceFirst("\\|PACKAGE_NAME\\|", packageName)
-                                    .replaceFirst(
-                                        "\\|TYPES_GOOGLE_PROTOBUF_VERSION\\|",
+                                    .replace("|PACKAGE_NAME|", packageName)
+                                    .replace(
+                                        "|TYPESCRIPT_PATH|",
+                                        project
+                                            .getRootProject()
+                                            .file("node_modules/typescript/bin/tsc")
+                                            .getAbsolutePath()
+                                            .replace("\\", "\\\\"))
+                                    .replace(
+                                        "|TYPES_GOOGLE_PROTOBUF_VERSION|",
                                         TYPES_GOOGLE_PROTOBUF_VERSION)
-                                    .replaceFirst(
-                                        "\\|GOOGLE_PROTOBUF_VERSION\\|", GOOGLE_PROTOBUF_VERSION)
-                                    .replaceFirst(
-                                        "\\|GRPC_WEB_CLIENT_VERSION\\|", GRPC_WEB_CLIENT_VERSION)
-                                    .replaceFirst(
-                                        "\\|CURIOSTACK_BASE_NODE_DEV_VERSION\\|",
+                                    .replace("|GOOGLE_PROTOBUF_VERSION|", GOOGLE_PROTOBUF_VERSION)
+                                    .replace("|GRPC_WEB_CLIENT_VERSION|", GRPC_WEB_CLIENT_VERSION)
+                                    .replace(
+                                        "|CURIOSTACK_BASE_NODE_DEV_VERSION|",
                                         CURIOSTACK_BASE_NODE_DEV_VERSION)
-                                    .replaceFirst("\\|TYPESCRIPT_VERSION\\|", TYPESCRIPT_VERSION)
+                                    .replace("|TYPESCRIPT_VERSION|", TYPESCRIPT_VERSION)
                                     .getBytes(StandardCharsets.UTF_8));
                             Files.write(
                                 tsConfigPath, TSCONFIG_TEMPLATE.getBytes(StandardCharsets.UTF_8));
@@ -338,7 +341,7 @@ public class GrpcApiPlugin implements Plugin<Project> {
   }
 
   private static void writeResolvedScript(
-      Project project, String nodePath, String outputFilename, String importedModule) {
+      Project project, Variant node, String outputFilename, String importedModule) {
     Path path;
     try {
       path =
@@ -346,9 +349,20 @@ public class GrpcApiPlugin implements Plugin<Project> {
               Paths.get(
                   project.getProjectDir().getAbsolutePath(), "node_modules/.bin/" + outputFilename),
               RESOLVED_PLUGIN_SCRIPT_TEMPLATE
-                  .replaceFirst("\\|NODE_PATH\\|", nodePath)
-                  .replaceFirst("\\|IMPORTED_MODULE\\|", importedModule)
+                  .replace("|NODE_PATH|", node.getNodeExec())
+                  .replace("|IMPORTED_MODULE|", importedModule)
                   .getBytes(StandardCharsets.UTF_8));
+      // Windows files are always executable, so just write it out.
+      Files.write(
+          Paths.get(
+              project.getProjectDir().getAbsolutePath(),
+              "node_modules/.bin/" + outputFilename + ".cmd"),
+          RESOLVED_PLUGIN_SCRIPT_WINDOWS_TEMPLATE
+              .replace(
+                  "|NODE_PATH|",
+                  node.getNodeBinDir().toPath().resolve("node.exe").toAbsolutePath().toString())
+              .replace("|IMPORTED_MODULE|", importedModule)
+              .getBytes(StandardCharsets.UTF_8));
     } catch (IOException e) {
       throw new UncheckedIOException("Could not write resolved plugin script.", e);
     }
