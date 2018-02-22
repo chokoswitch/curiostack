@@ -26,7 +26,6 @@ package org.curioswitch.common.server.framework.redis;
 
 import static org.curioswitch.common.server.framework.redis.RedisConstants.DEFAULT_METER_ID_PREFIX;
 
-import com.linecorp.armeria.common.CommonPools;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigBeanFactory;
 import dagger.Module;
@@ -57,8 +56,6 @@ public abstract class RedisModule {
     RedisClusterClient client =
         RedisClusterClient.create(
             DefaultClientResources.builder()
-                .eventExecutorGroup(CommonPools.workerGroup())
-                .eventLoopGroupProvider(ArmeriaEventLoopGroupProvider.INSTANCE)
                 .commandLatencyCollector(
                     new MicrometerCommandLatencyCollector(DEFAULT_METER_ID_PREFIX, registry))
                 .build(),
