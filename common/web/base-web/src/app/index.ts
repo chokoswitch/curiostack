@@ -25,5 +25,5 @@
 import { WebappConfig } from '../index';
 
 // tslint:disable-next-line:no-var-requires
-export const appConfig: WebappConfig = require(process.env.APP_CONFIG_PATH!)
+export const appConfig: WebappConfig = require(CURIOSTACK_APP_CONFIG_PATH)
   .default;

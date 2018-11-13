@@ -24,31 +24,13 @@
 
 process.env.NODE_ENV = 'development';
 
-import fs from 'fs';
-import path from 'path';
-
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
-import {
-  Configuration,
-  DefinePlugin,
-  HotModuleReplacementPlugin,
-} from 'webpack';
+import { Configuration, HotModuleReplacementPlugin } from 'webpack';
 
 import configureBase from './base';
 
-const APP_CONFIG_PATH = ['.ts', '.js']
-  .map((ext) => path.resolve(process.cwd(), `src/app${ext}`))
-  .find((p) => fs.existsSync(p));
-
 const plugins = [
-  new DefinePlugin({
-    'process.env': {
-      APP_CONFIG_PATH: JSON.stringify(APP_CONFIG_PATH),
-      NODE_ENV: JSON.stringify('development'),
-    },
-    WEBPACK_PRERENDERING: false,
-  }),
   new ForkTsCheckerWebpackPlugin({ checkSyntacticErrors: true }),
   new HtmlWebpackPlugin({
     inject: true,
@@ -73,6 +55,10 @@ const configuration: Configuration = configureBase({
     removeAvailableModules: false,
     removeEmptyChunks: false,
     splitChunks: false,
+  },
+  extraDefines: {
+    'process.env.NODE_ENV': JSON.stringify('development'),
+    WEBPACK_PRERENDERING: false,
   },
 });
 

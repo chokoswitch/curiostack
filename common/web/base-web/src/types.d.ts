@@ -24,6 +24,11 @@
 
 // tslint:disable:max-classes-per-file
 
+declare const CURIOSTACK_APP_CONFIG_PATH: string;
+declare const CURIOSTACK_PRERENDER_CONFIG_PATH: string;
+declare const CURIOSTACK_LOADABLE_JSON_PATH: string;
+declare const CURIOSTACK_ICONSTATS_JSON_PATH: string;
+
 // TODO(choko): Figure out why @types/intl isn't enough.
 declare module 'intl' {
 

@@ -22,10 +22,13 @@
  * SOFTWARE.
  */
 
+// tslint:disable:no-var-requires
+
 import path from 'path';
 
+import fs from 'fs';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import { Configuration } from 'webpack';
+import { Configuration, DefinePlugin } from 'webpack';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require(path.resolve(process.cwd(), 'package.json'));
@@ -33,6 +36,17 @@ const packageJson = require(path.resolve(process.cwd(), 'package.json'));
 const browsers = (packageJson.curiostack &&
   // tslint:disable-next-line:strict-boolean-expressions
   packageJson.curiostack.browsers) || ['last 2 versions'];
+
+const APP_CONFIG_PATH = ['.ts', '.js']
+  .map((ext) => path.resolve(process.cwd(), `src/app${ext}`))
+  .find((p) => fs.existsSync(p));
+
+const definesConfigPath = path.resolve(process.cwd(), 'src/defines');
+const DEFINES = ['.ts', '.tsx', '.js', '.jsx']
+  .map((ext) => `${definesConfigPath}${ext}`)
+  .some((p) => fs.existsSync(p))
+  ? require(definesConfigPath).default
+  : {};
 
 function configure(options: any): Configuration {
   const typescriptLoader = [
@@ -141,6 +155,9 @@ function configure(options: any): Configuration {
           test: /\.(jpg|png)$/,
           use: [
             {
+              loader: 'thread-loader',
+            },
+            {
               loader: path.resolve(__dirname, './curio-image-loader'),
               options: {},
             },
@@ -152,15 +169,22 @@ function configure(options: any): Configuration {
         },
         {
           test: /\.md$/,
-          use: [
-            'thread-loader',
-            'babel-loader',
-            '@hugmanrique/react-markdown-loader',
-          ],
+          use: ['thread-loader', 'html-loader', 'markdown-loader'],
+        },
+        {
+          test: /\.(yaml|yml)$/,
+          use: ['thread-loader', 'js-yaml-loader'],
         },
       ],
     },
-    plugins: [...options.plugins],
+    plugins: [
+      new DefinePlugin({
+        CURIOSTACK_APP_CONFIG_PATH: JSON.stringify(APP_CONFIG_PATH),
+        ...DEFINES,
+        ...options.extraDefines,
+      }),
+      ...options.plugins,
+    ],
     resolve: {
       modules: ['src', 'node_modules'],
       extensions: ['.js', '.jsx', '.ts', '.tsx'],

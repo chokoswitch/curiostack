@@ -46,7 +46,7 @@ import FaviconPlugin from 'favicons-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { ReactLoadablePlugin } from 'react-loadable/webpack';
 import StaticSiteGeneratorPlugin from 'static-site-generator-webpack-plugin';
-import { Configuration, DefinePlugin } from 'webpack';
+import { Configuration } from 'webpack';
 
 import configureBase from './base';
 
@@ -63,14 +63,6 @@ const loadableJsonPath = path.resolve(
 );
 
 const plugins = [
-  new DefinePlugin({
-    'process.env': {
-      APP_CONFIG_PATH: JSON.stringify(path.resolve(process.cwd(), 'src/app')),
-      NODE_ENV: JSON.stringify('production'),
-    },
-    WEBPACK_PRERENDERING: false,
-  }),
-
   new ReactLoadablePlugin({
     filename: loadableJsonPath,
   }),
@@ -119,25 +111,14 @@ export const appConfiguration: Configuration = configureBase({
     chunkFilename: '[name].[chunkhash].chunk.js',
     publicPath: '/static/',
   },
+  extraDefines: {
+    'process.env.NODE_ENV': JSON.stringify('production'),
+    WEBPACK_PRERENDERING: false,
+  },
 });
 
 function createPrerenderConfiguration(): Configuration {
   const prerenderPlugins = [
-    new DefinePlugin({
-      'process.env': {
-        APP_CONFIG_PATH: JSON.stringify(path.resolve(process.cwd(), 'src/app')),
-        PRERENDER_CONFIG_PATH: JSON.stringify(
-          path.resolve(process.cwd(), 'src/prerender'),
-        ),
-        NODE_ENV: JSON.stringify('production'),
-        LOADABLE_JSON_PATH: JSON.stringify(loadableJsonPath),
-        ICONSTATS_JSON_PATH: JSON.stringify(
-          path.resolve(process.cwd(), 'build/web/iconstats.json'),
-        ),
-      },
-      WEBPACK_PRERENDERING: true,
-    }),
-
     new StaticSiteGeneratorPlugin({
       entry: 'prerender',
       paths: Object.keys(prerenderConfig.paths),
@@ -189,6 +170,17 @@ function createPrerenderConfiguration(): Configuration {
       chunkFilename: '../prerender/[name].chunk.js',
       publicPath: '/static/',
       libraryTarget: 'commonjs',
+    },
+    extraDefines: {
+      'process.env.NODE_ENV': JSON.stringify('production'),
+      CURIOSTACK_PRERENDER_CONFIG_PATH: JSON.stringify(
+        path.resolve(process.cwd(), 'src/prerender'),
+      ),
+      CURIOSTACK_LOADABLE_JSON_PATH: JSON.stringify(loadableJsonPath),
+      CURIOSTACK_ICONSTATS_JSON_PATH: JSON.stringify(
+        path.resolve(process.cwd(), 'build/web/iconstats.json'),
+      ),
+      WEBPACK_PRERENDERING: true,
     },
   });
 }

@@ -51,10 +51,10 @@ import { routeInitialState } from '../state/reducers';
 import Template from './template';
 
 // tslint:disable:no-var-requires
-const LOADED_MODULES = require(process.env.LOADABLE_JSON_PATH!);
-const ICON_STATS = require(process.env.ICONSTATS_JSON_PATH!);
-const PRERENDER_CONFIG: PrerenderConfig = require(process.env
-  .PRERENDER_CONFIG_PATH!).default;
+const LOADED_MODULES = require(CURIOSTACK_LOADABLE_JSON_PATH!);
+const ICON_STATS = require(CURIOSTACK_ICONSTATS_JSON_PATH!);
+const PRERENDER_CONFIG: PrerenderConfig = require(CURIOSTACK_PRERENDER_CONFIG_PATH!)
+  .default;
 
 interface Props {
   messages: LocaleMessages;

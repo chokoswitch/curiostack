@@ -27,7 +27,7 @@ import '@babel/polyfill';
 import initApp from './init';
 
 // tslint:disable-next-line:no-var-requires
-const appConfig = require(process.env.APP_CONFIG_PATH!).default;
+const appConfig = require(CURIOSTACK_APP_CONFIG_PATH).default;
 
 if (appConfig) {
   initApp(appConfig);
