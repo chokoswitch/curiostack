@@ -90,7 +90,9 @@
     "intl": "1.2.5",
     "jest": "23.6.0",
     "jest-styled-components": "6.3.1",
+    "js-yaml-loader": "1.0.1",
     "loader-utils": "1.1.0",
+    "markdown-loader": "4.0.0",
     "mozjpeg": "6.0.1",
     "raw-loader": "0.5.1",
     "react": "16.6.1",
@@ -127,7 +129,8 @@
     "webpack-cli": "3.1.2",
     "webpack-dev-server": "3.1.10",
     "webpack-sane-compiler": "3.1.1",
-    "webpack-sane-compiler-reporter": "3.3.2"
+    "webpack-sane-compiler-reporter": "3.3.2",
+    "yaml-frontmatter-loader": "0.1.0"
   },
   "devDependencies": {
     "@types/compression-webpack-plugin": "0.4.2",
