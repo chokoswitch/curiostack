@@ -341,6 +341,7 @@ public class GenerateProtoTask extends DefaultTask {
             .toArray(Dependency[]::new);
     Configuration configuration =
         getProject().getConfigurations().detachedConfiguration(dependencies);
+    configuration.setExtendsFrom(getProject().getConfigurations());
 
     // Resolve once to download all tools in parallel.
     configuration.resolve();

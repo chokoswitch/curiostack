@@ -25,14 +25,12 @@
 package org.curioswitch.gradle.plugins.grpcapi;
 
 import com.google.common.io.Resources;
-import io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import org.apache.tools.ant.taskdefs.condition.Os;
 import org.curioswitch.gradle.plugins.grpcapi.tasks.PackageWebTask;
 import org.curioswitch.gradle.plugins.nodejs.NodePlugin;
@@ -89,24 +87,12 @@ public class GrpcApiPlugin implements Plugin<Project> {
 
     ProtobufExtension protobuf = project.getExtensions().getByType(ProtobufExtension.class);
 
-    Map<String, String> managedVersions =
-        project.getExtensions().getByType(DependencyManagementExtension.class).getManagedVersions();
-
-    protobuf
-        .getProtoc()
-        .getArtifact()
-        .set("com.google.protobuf:protoc:" + managedVersions.get("com.google.protobuf:protoc"));
+    protobuf.getProtoc().getArtifact().set("com.google.protobuf:protoc");
     protobuf
         .getLanguages()
         .register(
             "grpc",
-            language ->
-                language
-                    .getPlugin()
-                    .getArtifact()
-                    .set(
-                        "io.grpc:protoc-gen-grpc-java:"
-                            + managedVersions.get("io.grpc:grpc-core")));
+            language -> language.getPlugin().getArtifact().set("io.grpc:protoc-gen-grpc-java"));
 
     project.afterEvaluate(
         p -> {

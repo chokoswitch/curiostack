@@ -23,7 +23,6 @@
  */
 
 plugins {
-    `java-library`
     `maven-publish`
     id("io.spring.dependency-management")
 }
@@ -154,7 +153,7 @@ val DEPENDENCY_SETS = listOf(
     DependencySet(
         "com.google.errorprone",
         "2.3.2",
-        listOf("error_prone_core")
+        listOf("error_prone_annotations", "error_prone_core")
     ),
     DependencySet(
         "com.google.firebase",
@@ -245,7 +244,8 @@ val DEPENDENCY_SETS = listOf(
             "grpc-okhttp",
             "grpc-protobuf",
             "grpc-services",
-            "grpc-stub")
+            "grpc-stub",
+            "protoc-gen-grpc-java")
     ),
     DependencySet(
         "io.micrometer",

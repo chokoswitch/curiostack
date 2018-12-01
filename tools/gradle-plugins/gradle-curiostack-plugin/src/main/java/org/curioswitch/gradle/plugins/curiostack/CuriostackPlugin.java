@@ -40,8 +40,6 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
 import com.palantir.baseline.plugins.BaselineIdea;
 import groovy.util.Node;
-import io.spring.gradle.dependencymanagement.DependencyManagementPlugin;
-import io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -70,7 +68,6 @@ import nu.studer.gradle.jooq.JooqPlugin;
 import nu.studer.gradle.jooq.JooqTask;
 import org.curioswitch.gradle.conda.CondaBuildEnvPlugin;
 import org.curioswitch.gradle.plugins.ci.CurioGenericCiPlugin;
-import org.curioswitch.gradle.plugins.curiostack.StandardDependencies.DependencySet;
 import org.curioswitch.gradle.plugins.curiostack.tasks.CreateShellConfigTask;
 import org.curioswitch.gradle.plugins.curiostack.tasks.SetupGitHooks;
 import org.curioswitch.gradle.plugins.gcloud.GcloudPlugin;
@@ -216,27 +213,25 @@ public class CuriostackPlugin implements Plugin<Project> {
 
     rootProject.allprojects(
         project -> {
-          project.getPlugins().withType(JavaPlugin.class, plugin -> setupJavaProject(project));
+          var curiostackBom =
+              project.getDependencies().platform("org.curioswitch.curiostack:curiostack-bom:0.0.1");
+          var curiostackConfiguration =
+              project
+                  .getConfigurations()
+                  .register(
+                      "curiostack",
+                      t -> project.getDependencies().add("curiostack", curiostackBom));
 
           project
-              .getPlugins()
-              .withType(
-                  DependencyManagementPlugin.class,
-                  unused -> {
-                    DependencyManagementExtension dependencyManagement =
-                        project.getExtensions().getByType(DependencyManagementExtension.class);
-                    dependencyManagement.dependencies(
-                        dependencies -> {
-                          for (DependencySet set : StandardDependencies.DEPENDENCY_SETS) {
-                            dependencies.dependencySet(
-                                ImmutableMap.of(
-                                    "group", set.group(),
-                                    "version", set.version()),
-                                dependencySet -> set.modules().forEach(dependencySet::entry));
-                          }
-                          StandardDependencies.DEPENDENCIES.forEach(dependencies::dependency);
-                        });
+              .getConfigurations()
+              .configureEach(
+                  configuration -> {
+                    if (!configuration.getName().equals("curiostack")) {
+                      configuration.extendsFrom(curiostackConfiguration.get());
+                    }
                   });
+
+          project.getPlugins().withType(JavaPlugin.class, plugin -> setupJavaProject(project));
 
           project
               .getPlugins()
@@ -291,7 +286,6 @@ public class CuriostackPlugin implements Plugin<Project> {
     plugins.apply(AptPlugin.class);
     plugins.apply(AptIdeaPlugin.class);
     plugins.apply(BaselineIdea.class);
-    plugins.apply(DependencyManagementPlugin.class);
     plugins.apply(ErrorPronePlugin.class);
     plugins.apply(LicensePlugin.class);
     plugins.apply(SpotlessPlugin.class);
@@ -657,6 +651,10 @@ public class CuriostackPlugin implements Plugin<Project> {
     dependencies.add(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME, "com.google.code.findbugs:jsr305");
     dependencies.add(
         testConfiguration.getName(), "org.curioswitch.curiostack:curio-testing-framework");
+
+    // dependencies.add(testConfiguration.getName(),
+    // dependencies.platform("org.curioswitch.curiostack:curiostack-bom:0.0.1"));
+
     dependencies.add(testConfiguration.getName(), "org.assertj:assertj-core");
     dependencies.add(testConfiguration.getName(), "org.awaitility:awaitility");
     dependencies.add(testConfiguration.getName(), "junit:junit");
