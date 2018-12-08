@@ -227,7 +227,7 @@ public class CuriostackPlugin implements Plugin<Project> {
               .configureEach(
                   configuration -> {
                     if (!configuration.getName().equals("curiostack")) {
-                      configuration.extendsFrom(curiostackConfiguration.get());
+                      project.getDependencies().add(configuration.getName(), curiostackBom);
                     }
                   });
 
