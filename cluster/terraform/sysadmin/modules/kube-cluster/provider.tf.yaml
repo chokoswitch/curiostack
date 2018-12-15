@@ -1,0 +1,18 @@
+provider:
+  kubernetes:
+    alias: 'module'
+    host: '${google_container_cluster.cluster.endpoint}'
+    cluster_ca_certificate: '${base64decode(google_container_cluster.cluster.master_auth.0.cluster_ca_certificate)}'
+  k8s:
+    alias: 'module'
+    kubeconfig_context: 'gke_curioswitch-cluster_${google_container_cluster.cluster.region}_${google_container_cluster.cluster.name}'
+  helm:
+    alias: 'module'
+    namespace: tiller-prod
+    enable_tls: true
+    home: '../helm'
+    client_key: '../helm/key.pem'
+    client_certificate: '../helm/cert.pem'
+    ca_certificate: '../helm/ca.pem'
+    kubernetes:
+      config_context: 'gke_curioswitch-cluster_${google_container_cluster.cluster.region}_${google_container_cluster.cluster.name}'
